@@ -5,44 +5,42 @@ using System.Reflection.PortableExecutable;
 
 namespace LDAP_Auth.Services;
 
-public class LdapAuthService : ILdapAuthService
+public Task<LdapAuthResult> AuthenticateAsync(string username, string password)
 {
-    private readonly LdapSettings _settings;
+    var result = new LdapAuthResult { Username = username };
 
-    public LdapAuthService(IOptions<LdapSettings> settings)
+    try
     {
-        _settings = settings.Value;
-    }
-
-    public Task<bool> AuthenticateAsync(string username, string password)
-    {
-        try
+        string domainUser = $"{_settings.Domain}\\{username}";
+        using var entry = new DirectoryEntry(_settings.LdapPath, domainUser, password);
+        using var searcher = new DirectorySearcher(entry)
         {
-            // Compose domain-qualified username
-            var domainUser = $"{_settings.Domain}\\{username}";
+            Filter = $"(sAMAccountName={username})"
+        };
 
-            using (var entry = new System.DirectoryServices.DirectoryEntry(_settings.LdapPath))
+        searcher.PropertiesToLoad.Add("memberOf");
+        var searchResult = searcher.FindOne();
+
+        if (searchResult != null)
+        {
+            result.IsAuthenticated = true;
+
+            if (searchResult.Properties["memberOf"] is { Count: > 0 } memberOfCollection)
             {
-                entry.Username = domainUser;
-                entry.Password = password;
-
-                // Force bind to check credentials
-                var nativeObject = entry.NativeObject; // throws if invalid credentials
-
-                using (var searcher = new DirectorySearcher(entry))
+                foreach (string groupDn in memberOfCollection)
                 {
-                    searcher.Filter = $"(sAMAccountName={username})";
-                    searcher.PropertiesToLoad.Add("cn"); // or any property you want
-
-                    var result = searcher.FindOne();
-                    return Task.FromResult(result != null);
+                    // Optional: parse CN=GroupName,... to just GroupName
+                    var cn = groupDn.Split(',')[0].Replace("CN=", "");
+                    result.Groups.Add(cn);
                 }
             }
         }
-        catch
-        {
-            return Task.FromResult(false);
-        }
+    }
+    catch
+    {
+        // Optional: log exception
     }
 
+    return Task.FromResult(result);
 }
+

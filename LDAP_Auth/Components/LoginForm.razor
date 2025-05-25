@@ -38,11 +38,13 @@
 
     private async Task HandleLogin()
     {
-        if (await AuthService.AuthenticateAsync(loginModel.Username, loginModel.Password))
+        var authResult = await AuthService.AuthenticateAsync(loginModel.Username, loginModel.Password);
+
+        if (authResult.IsAuthenticated)
         {
             message = "Login successful.";
             if (OnLoginSuccess.HasDelegate)
-                await OnLoginSuccess.InvokeAsync(loginModel.Username);
+                await OnLoginSuccess.InvokeAsync(authResult);
         }
         else
         {
