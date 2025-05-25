@@ -7,27 +7,27 @@
 <h3>Login</h3>
 <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
     <table cellspacing="10" cellpadding="10">
-    <tr>
-        <td>    
-            <InputText @bind-Value="loginModel.Username" placeholder="Username" />
-        </td>
-    </tr>
-    <tr>
-        <td>
-            <InputText @bind-Value="loginModel.Password" placeholder="Password" type="password" />
-        </td>
-    </tr>
-    <tr>
-        <td>
-            <button type="submit">Login</button>
-        </td>
-    </tr>
-    <tr>
-        <td align="center" >
-            <p>@message</p>
-        </td>
-    </tr>
-</table>
+        <tr>
+            <td>
+                <InputText @bind-Value="loginModel.Username" placeholder="Username" @oninput="ClearMessage" />
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <InputText @bind-Value="loginModel.Password" placeholder="Password" type="password" @oninput="ClearMessage" />
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <button type="submit">Login</button>
+            </td>
+        </tr>
+        <tr>
+            <td align="center">
+                <p>@message</p>
+            </td>
+        </tr>
+    </table>
 </EditForm>
 
 @code {
@@ -48,6 +48,11 @@
         {
             message = "Invalid credentials.";
         }
+    }
+
+    private void ClearMessage()
+    {
+        message = string.Empty;
     }
 
     private class LoginModel
