@@ -1,0 +1,58 @@
+@inject ILdapAuthService AuthService
+@inject NavigationManager Navigation
+@using LDAP_Auth.Services
+@using Microsoft.AspNetCore.Components.Forms
+@namespace LDAP_Auth.Components
+
+<h3>Login</h3>
+<EditForm Model="loginModel" OnValidSubmit="HandleLogin">
+    <table cellspacing="10" cellpadding="10">
+    <tr>
+        <td>    
+            <InputText @bind-Value="loginModel.Username" placeholder="Username" />
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <InputText @bind-Value="loginModel.Password" placeholder="Password" type="password" />
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <button type="submit">Login</button>
+        </td>
+    </tr>
+    <tr>
+        <td align="center" >
+            <p>@message</p>
+        </td>
+    </tr>
+</table>
+</EditForm>
+
+@code {
+    [Parameter] public EventCallback<string> OnLoginSuccess { get; set; }
+
+    private LoginModel loginModel = new();
+    private string message = string.Empty;
+
+    private async Task HandleLogin()
+    {
+        if (await AuthService.AuthenticateAsync(loginModel.Username, loginModel.Password))
+        {
+            message = "Login successful.";
+            if (OnLoginSuccess.HasDelegate)
+                await OnLoginSuccess.InvokeAsync(loginModel.Username);
+        }
+        else
+        {
+            message = "Invalid credentials.";
+        }
+    }
+
+    private class LoginModel
+    {
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+}

@@ -1,0 +1,19 @@
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject AuthenticationStateProvider AuthProvider
+@inject NavigationManager Navigation
+
+<button @onclick="HandleLogout">Logout</button>
+
+@code {
+    private void HandleLogout()
+    {
+        if (AuthProvider is LDAP_Auth.Services.CustomAuthStateProvider ldapAuthProvider)
+        {
+            ldapAuthProvider.MarkUserAsLoggedOut();
+        }
+
+        // Redirect to login or homepage
+        Navigation.NavigateTo("/", forceLoad: true);
+    }
+}
